@@ -1,16 +1,66 @@
-# React + Vite
+# 2D Canvas Editor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern web-based 2D Canvas Editor built with **React** and **Vite**. This project provides an intuitive interface for creating, editing, and exporting 2D graphics directly in your browser.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+-   **Draw Shapes:** Easily add and manipulate rectangles, circles, lines, and more.
+-   **Freehand Drawing:** Sketch freely with a customizable brush.
+-   **Layer Management:** Organize elements with layer controls (move, hide, lock, delete).
+-   **Undo/Redo:** Step backward or forward through your editing history.
+-   **Export Options:** Download your canvas as PNG, JPEG, or SVG.
+-   **Responsive UI:** Works seamlessly on desktop and mobile devices.
+-   **Keyboard Shortcuts:** Speed up your workflow with handy shortcuts.
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Prerequisites
 
-## Expanding the ESLint configuration
+-   [Node.js](https://nodejs.org/) (v16+ recommended)
+-   [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Installation
+
+```bash
+git clone https://github.com/your-username/2D_Canvas_editor.git
+cd 2D_Canvas_editor
+npm install
+```
+
+### Running the App
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) to view the app in your browser.
+
+## Project Structure
+
+```
+/src
+  /components    # Reusable React components
+  /canvas        # Canvas rendering logic
+  /utils         # Utility functions
+  App.jsx        # Main app component
+  main.jsx       # Entry point
+```
+
+## Technologies Used
+
+-   [React](https://react.dev/)
+-   [Vite](https://vitejs.dev/)
+-   [Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
+-   [ESLint](https://eslint.org/) for code quality
+
+## Contributing
+
+Contributions are welcome! Please open issues or submit pull requests for improvements and bug fixes.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+Made with ❤️ by [Your Name]
