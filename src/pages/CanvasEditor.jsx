@@ -135,19 +135,31 @@ export default function CanvasEditor() {
 	async function saveToFirestore(manual = true) {
 		const canvas = fabricRef.current;
 		if (!canvas || !canvasId) return;
-		try {
-			const json = canvas.toJSON();
-			const sanitized = sanitizeJSON(json); // ✅ sanitize pen paths
 
+		try {
+			// ✅ Convert pen paths to SVG strings so Firestore can store them
+			canvas.getObjects().forEach((obj) => {
+				if (obj.type === "path") {
+					obj.toObject = () => ({
+						type: "path",
+						path: obj.toSVG(), // store as string
+						stroke: obj.stroke,
+						strokeWidth: obj.strokeWidth,
+					});
+				}
+			});
+
+			const json = canvas.toJSON(); // now safe to save
 			await setDoc(
 				doc(db, "canvases", canvasId),
 				{
-					data: sanitized,
+					data: json,
 					updatedAt: serverTimestamp(),
 					lastModifiedBy: clientIdRef.current,
 				},
 				{ merge: true }
 			);
+
 			if (manual) alert("Saved!");
 		} catch (err) {
 			console.error("Save failed", err);
@@ -166,6 +178,7 @@ export default function CanvasEditor() {
 			width: 120,
 			height: 80,
 		});
+		setIsDrawing(false);
 		fabricRef.current.add(rect);
 	}
 
@@ -179,6 +192,7 @@ export default function CanvasEditor() {
 			radius: 50,
 			fill: color || "#60a5fa",
 		});
+		setIsDrawing(false);
 		fabricRef.current.add(circle);
 	}
 
@@ -192,6 +206,7 @@ export default function CanvasEditor() {
 			fontSize: 24,
 			fill: color || "#000000",
 		});
+		setIsDrawing(false);
 		fabricRef.current.add(text);
 	}
 
