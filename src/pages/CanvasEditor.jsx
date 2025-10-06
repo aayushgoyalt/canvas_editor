@@ -118,12 +118,12 @@ export default function CanvasEditor() {
 	}
 
 	function sanitizeJSON(json) {
-		// Deep clone and remove any nested arrays in objects
+		// Deep clone and remove nested arrays inside path objects
 		const clone = JSON.parse(
 			JSON.stringify(json, (key, value) => {
-				if (Array.isArray(value)) {
-					// Flatten nested arrays to strings (or you can use a different strategy)
-					return value.every((v) => Array.isArray(v)) ? [] : value;
+				if (key === "path" && Array.isArray(value)) {
+					// Convert path to a flat array of points as string
+					return value.map((v) => v.join(",")).join(";");
 				}
 				return value;
 			})
@@ -137,7 +137,7 @@ export default function CanvasEditor() {
 		if (!canvas || !canvasId) return;
 		try {
 			const json = canvas.toJSON();
-			const sanitized = sanitizeJSON(json); // ✅ sanitize nested arrays
+			const sanitized = sanitizeJSON(json); // ✅ sanitize pen paths
 
 			await setDoc(
 				doc(db, "canvases", canvasId),
