@@ -33,8 +33,8 @@ export default function CanvasEditor() {
 				fabricModule.fabric || fabricModule.default || fabricModule;
 
 			canvas = new fabric.Canvas(canvasElRef.current, {
-				width: 1850,
-				height: 820,
+				width: 1500,
+				height: 700,
 				backgroundColor: "#ffffff",
 				preserveObjectStacking: true,
 			});
