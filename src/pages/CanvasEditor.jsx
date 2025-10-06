@@ -178,7 +178,6 @@ export default function CanvasEditor() {
 			width: 120,
 			height: 80,
 		});
-		setIsDrawing(false);
 		fabricRef.current.add(rect);
 	}
 
@@ -192,7 +191,6 @@ export default function CanvasEditor() {
 			radius: 50,
 			fill: color || "#60a5fa",
 		});
-		setIsDrawing(false);
 		fabricRef.current.add(circle);
 	}
 
@@ -206,7 +204,6 @@ export default function CanvasEditor() {
 			fontSize: 24,
 			fill: color || "#000000",
 		});
-		setIsDrawing(false);
 		fabricRef.current.add(text);
 	}
 
