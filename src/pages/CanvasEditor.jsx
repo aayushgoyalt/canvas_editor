@@ -23,23 +23,26 @@ export default function CanvasEditor() {
 	const [color, setColor] = useState("#000000");
 	const [isDrawing, setIsDrawing] = useState(false);
 
-	// 🧩 Initialize Fabric once
 	useEffect(() => {
 		let canvas;
 
-		(async () => {
+		const initCanvas = async () => {
 			const fabricModule = await import("fabric");
 			const fabric =
 				fabricModule.fabric || fabricModule.default || fabricModule;
 
+			if (fabricRef.current) {
+				fabricRef.current.dispose(); // Dispose previous canvas
+			}
+
 			canvas = new fabric.Canvas(canvasElRef.current, {
-				width: 1500,
+				width: 1420,
 				height: 700,
 				backgroundColor: "#ffffff",
 				preserveObjectStacking: true,
 			});
-			fabricRef.current = canvas;
 
+			fabricRef.current = canvas;
 			// Save debounce helper
 			const scheduleSave = () => {
 				if (isApplyingRemoteRef.current) return;
@@ -66,33 +69,34 @@ export default function CanvasEditor() {
 				}
 			};
 			window.addEventListener("keydown", handleKey);
+		};
 
-			return () => {
-				window.removeEventListener("keydown", handleKey);
-				canvas.dispose();
-			};
-		})();
+		initCanvas();
+
+		return () => {
+			if (fabricRef.current) fabricRef.current.dispose();
+		};
 	}, [canvasId]);
 
-	// 🧠 Load Firestore data + real-time sync
+	const [isInitialLoad, setIsInitialLoad] = useState(true);
+
 	useEffect(() => {
 		if (!canvasId) return;
 		const canvasDoc = doc(db, "canvases", canvasId);
 
-		// Initial load
 		(async () => {
 			const snap = await getDoc(canvasDoc);
 			if (snap.exists() && snap.data().data) {
 				await applyRemoteJSON(snap.data().data);
 			}
+			setIsInitialLoad(false);
 		})();
 
-		// Real-time updates
 		const unsub = onSnapshot(canvasDoc, (snap) => {
 			if (!snap.exists()) return;
 			const data = snap.data();
 			if (data.lastModifiedBy === clientIdRef.current) return;
-			if (data.data) applyRemoteJSON(data.data);
+			if (!isInitialLoad && data.data) applyRemoteJSON(data.data);
 		});
 
 		return () => unsub();
@@ -100,6 +104,7 @@ export default function CanvasEditor() {
 
 	// 🧩 Apply JSON properly
 	async function applyRemoteJSON(json) {
+		if (!json || !json.objects || json.objects.length === 0) return;
 		const canvas = fabricRef.current;
 		if (!canvas) return;
 
@@ -110,7 +115,6 @@ export default function CanvasEditor() {
 		isApplyingRemoteRef.current = true;
 
 		canvas.loadFromJSON(json, () => {
-			// ✅ Force immediate redraw after load
 			canvas.renderAll();
 			canvas.requestRenderAll();
 			isApplyingRemoteRef.current = false;
@@ -118,38 +122,31 @@ export default function CanvasEditor() {
 	}
 
 	function sanitizeJSON(json) {
-		// Deep clone and remove nested arrays inside path objects
-		const clone = JSON.parse(
+		return JSON.parse(
 			JSON.stringify(json, (key, value) => {
 				if (key === "path" && Array.isArray(value)) {
-					// Convert path to a flat array of points as string
-					return value.map((v) => v.join(",")).join(";");
+					return value.map((point) => point.join(",")).join(";");
 				}
 				return value;
 			})
 		);
-		return clone;
 	}
 
-	// 💾 Save to Firestore
 	async function saveToFirestore(manual = true) {
 		const canvas = fabricRef.current;
 		if (!canvas || !canvasId) return;
 
 		try {
-			// ✅ Convert pen paths to SVG strings so Firestore can store them
-			canvas.getObjects().forEach((obj) => {
-				if (obj.type === "path") {
-					obj.toObject = () => ({
-						type: "path",
-						path: obj.toSVG(), // store as string
-						stroke: obj.stroke,
-						strokeWidth: obj.strokeWidth,
-					});
-				}
-			});
+			// 1️⃣ Get canvas JSON
+			let json = canvas.toJSON();
 
-			const json = canvas.toJSON(); // now safe to save
+			// 2️⃣ Check if there are any objects to save
+			if (!json.objects || json.objects.length === 0) return;
+
+			// 3️⃣ Sanitize JSON to avoid nested arrays
+			json = sanitizeJSON(json);
+
+			// 4️⃣ Save to Firestore
 			await setDoc(
 				doc(db, "canvases", canvasId),
 				{
@@ -217,16 +214,18 @@ export default function CanvasEditor() {
 
 		const newMode = !isDrawing;
 		setIsDrawing(newMode);
+
 		canvas.isDrawingMode = newMode;
 
 		if (newMode) {
-			if (!canvas.freeDrawingBrush) {
-				canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-			}
-			const brush = canvas.freeDrawingBrush;
+			// PencilBrush should only have stroke
+			const brush = new fabric.PencilBrush(canvas);
 			brush.width = 4;
 			brush.color = color || "#000000";
+			canvas.freeDrawingBrush = brush;
 		}
+
+		canvas.requestRenderAll();
 	};
 
 	const updateSelectedColor = (hex) => {
